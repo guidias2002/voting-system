@@ -21,7 +21,6 @@ public class VotingEntity {
     private Long id;
     private Long agendaId;
     private String agenda;
-    private Boolean vote;
     private int upvotes;
     private int negativeVotes;
     private LocalDateTime createdAt;
