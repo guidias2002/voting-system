@@ -2,12 +2,18 @@ package com.gcd.voting_system.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "agenda")
+@Data
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 public class AgendaEntity {
 
     @Id
@@ -16,24 +22,5 @@ public class AgendaEntity {
     private String agenda;
     private LocalDateTime createdAt;
 
-    public AgendaEntity(String agenda, LocalDateTime createdAt) {
-        this.agenda = agenda;
-        this.createdAt = LocalDateTime.now();
-    }
-
-    public AgendaEntity() {
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getAgenda() {
-        return agenda;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
 }
 
