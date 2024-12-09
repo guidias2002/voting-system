@@ -11,4 +11,6 @@ import java.util.List;
 public interface VotingRepository extends JpaRepository<VotingEntity, Long> {
     List<VotingEntity> findAllByExpirationTimeBeforeAndStatus(LocalDateTime now, boolean status);
 
+    List<VotingEntity> findAllVotingByAgendaId(Long agendaId);
+
 }

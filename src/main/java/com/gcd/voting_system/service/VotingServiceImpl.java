@@ -1,5 +1,6 @@
 package com.gcd.voting_system.service;
 
+import com.gcd.voting_system.dto.VoteDto;
 import com.gcd.voting_system.dto.VotingDto;
 import com.gcd.voting_system.entity.AgendaEntity;
 import com.gcd.voting_system.entity.VotingEntity;
@@ -51,7 +52,7 @@ public class VotingServiceImpl implements VotingService{
     }
 
     @Override
-    public void vote(Long votingId, Boolean voting) {
+    public void vote(Long votingId, Boolean vote) {
         VotingEntity votingEntity = votingRepository.findById(votingId)
                 .orElseThrow(() -> new NotFoundException("Votação não encontrada."));
 
@@ -59,7 +60,7 @@ public class VotingServiceImpl implements VotingService{
             throw new ExpiredVoteException("Votação expirada.");
         }
 
-        if(voting) {
+        if(vote) {
             votingEntity.setUpvotes(votingEntity.getUpvotes() +1);
         } else {
             votingEntity.setNegativeVotes(votingEntity.getNegativeVotes() +1);
@@ -74,6 +75,14 @@ public class VotingServiceImpl implements VotingService{
     public List<VotingDto> findAllVoting() {
 
         return votingMapper.toVotingDtoList(votingRepository.findAll());
+    }
+
+    @Override
+    public List<VotingDto> findAllVotingByAgendaId(Long agendaId) {
+        agendaRepository.findById(agendaId)
+                .orElseThrow(() -> new NotFoundException("Pauta não encotrada."));
+
+        return votingMapper.toVotingDtoList(votingRepository.findAllVotingByAgendaId(agendaId));
     }
 
     @Scheduled(fixedRate = 10000)
