@@ -3,6 +3,9 @@ package com.gcd.voting_system.service;
 import com.gcd.voting_system.dto.VotingDto;
 import com.gcd.voting_system.entity.AgendaEntity;
 import com.gcd.voting_system.entity.VotingEntity;
+import com.gcd.voting_system.exception.customExceptions.ExpiredVoteException;
+import com.gcd.voting_system.exception.customExceptions.NotFoundException;
+import com.gcd.voting_system.mapper.VotingMapper;
 import com.gcd.voting_system.repository.AgendaRepository;
 import com.gcd.voting_system.repository.VotingRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,28 +24,39 @@ public class VotingServiceImpl implements VotingService{
     @Autowired
     private AgendaRepository agendaRepository;
 
+    @Autowired
+    private VotingMapper votingMapper;
+
     @Override
     public VotingDto createVoting(Long agendaId) {
         AgendaEntity agendaEntity = agendaRepository.findById(agendaId)
-                .orElseThrow(() -> new RuntimeException("Agenda not found."));
+                .orElseThrow(() -> new NotFoundException("Pauta não encotrada."));
 
         LocalDateTime expirationTime = LocalDateTime.now().plusSeconds(60);
 
-        VotingEntity votingEntity = new VotingEntity(agendaEntity.getId(), agendaEntity.getAgenda(), 0, 0, LocalDateTime.now(), LocalDateTime.now(), true, expirationTime);
+        VotingEntity votingEntity = VotingEntity.builder()
+                .agendaId(agendaEntity.getId())
+                .agenda(agendaEntity.getAgenda())
+                .upvotes(0)
+                .negativeVotes(0)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .status(true)
+                .expirationTime(expirationTime)
+                .build();
+
         votingRepository.save(votingEntity);
 
-        VotingDto votingDto = new VotingDto(votingEntity.getId(), votingEntity.getAgenda(), votingEntity.getAgendaId(), votingEntity.getUpvotes(), votingEntity.getNegativeVotes(), votingEntity.getCreatedAt(), votingEntity.getUpdatedAt(), votingEntity.getStatus());
-
-        return votingDto;
+        return votingMapper.toVotingDto(votingEntity);
     }
 
     @Override
     public void vote(Long votingId, Boolean voting) {
         VotingEntity votingEntity = votingRepository.findById(votingId)
-                .orElseThrow(() -> new RuntimeException("Voting not found."));
+                .orElseThrow(() -> new NotFoundException("Votação não encontrada."));
 
         if(!votingEntity.getStatus()) {
-            throw new RuntimeException("Votação expirada.");
+            throw new ExpiredVoteException("Votação expirada.");
         }
 
         if(voting) {
@@ -54,15 +68,12 @@ public class VotingServiceImpl implements VotingService{
         votingEntity.setUpdatedAt(LocalDateTime.now());
 
         votingRepository.save(votingEntity);
-
     }
 
     @Override
     public List<VotingDto> findAllVoting() {
 
-        return votingRepository.findAll().stream().map(
-                v -> new VotingDto(v.getId(), v.getAgenda(), v.getAgendaId(), v.getUpvotes(), v.getNegativeVotes(), v.getCreatedAt(), v.getUpdatedAt(), v.getStatus())
-        ).toList();
+        return votingMapper.toVotingDtoList(votingRepository.findAll());
     }
 
     @Scheduled(fixedRate = 10000)

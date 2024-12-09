@@ -3,8 +3,10 @@ package com.gcd.voting_system.service;
 import com.gcd.voting_system.dto.AgendaDto;
 import com.gcd.voting_system.dto.AgendaPostDto;
 import com.gcd.voting_system.entity.AgendaEntity;
+import com.gcd.voting_system.mapper.AgendaMapper;
 import com.gcd.voting_system.repository.AgendaRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -16,18 +18,22 @@ public class AgendaServiceImpl implements AgendaService {
     @Autowired
     private AgendaRepository agendaRepository;
 
+    @Autowired
+    private AgendaMapper agendaMapper;
+
     @Override
     public void createAgenda(AgendaPostDto agendaPostDto) {
-        AgendaEntity agenda = new AgendaEntity(agendaPostDto.getAgenda(), LocalDateTime.now());
+        AgendaEntity agendaEntity = AgendaEntity.builder()
+                .agenda(agendaPostDto.getAgenda())
+                .createdAt(LocalDateTime.now())
+                .build();
 
-        agendaRepository.save(agenda);
+        agendaRepository.save(agendaEntity);
     }
 
     @Override
     public List<AgendaDto> findAllAgenda() {
 
-        return agendaRepository.findAll().stream().map(
-                a -> new AgendaDto(a.getId(), a.getAgenda(), a.getCreatedAt())
-        ).toList();
+        return agendaMapper.toAgendaDtoList(agendaRepository.findAll());
     }
 }
